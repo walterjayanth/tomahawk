@@ -245,7 +245,7 @@ E$('showsum').onclick=function(){
 
   for (var room_name in Rates) {
     if (Rates.hasOwnProperty(room_name)){
-      rates+='<input name="rooms" type="radio" value="'+room_name+'" checked> '+room_name+'<br>Room Charges: NZD$'+ Rates[room_name]['rate']
+      rates+='<input name="rooms" type="radio" value="'+room_name+'" checked> <b><u>'+room_name+'</u></b><br>Room Charges: NZD$'+ Rates[room_name]['rate']
           +'<br>Tax: NZD$'+ Rates[room_name]['tax']
           +'<br>Total Charges: NZD$'+ Rates[room_name]['tot']+'<br><br><br>';
     }
