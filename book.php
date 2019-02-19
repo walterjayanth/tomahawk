@@ -39,7 +39,7 @@
 
 
 <div id="cal" class="box" style="display:none">
-  <div class="heading">Rooms Availability</div><br>
+  <div class="heading">Rooms Availability</div>
     <input id="pTDate" name="pTDate" type="hidden" value="">
     <div id="DP" style="height:460px;width:100%;max-width:560px;"></div>
     <script>
@@ -48,15 +48,9 @@
         container: document.querySelector('#DP'),
         inline:true,
         range: false,
-        closeOnSelect: false,
-
-        tooltips: {
-          date: new Date(2019,14,2),
-          text: 'Room Name: Room1, Room2'
-        }
+        closeOnSelect: false
       });
-      DP.startDate = now;
-      DP.minDate = now.setDate(now.getDate() - 1);
+
     </script>
     <br>
     <input id="showsum" type="button" value="View Summary" style="display:none">
@@ -74,7 +68,7 @@
 
 <div id="enq" class="box" style="display:none">
     <div class="heading">Enquiry Form</div>
-    <form action="output.php" target="_self" method="POST">
+    <form id="frmEnq" action="output.php" target="_self" method="POST">
       <label for="fname">First Name:</label>
       <input id="fname" name="fname" size="25" maxlength="50">
       <br><br>
@@ -124,11 +118,12 @@ var Rates={}; //Rates Object For Total Cost Calculation
 var avRooms={}; //Available Rooms Object
 var Rooms={}; //Rooms Object
 var selDate=[]; //Selected Dates Array
-var pRates,totRates;
+var pRooms,totRooms,pRates,totRates;
 
 //Check Available Rooms From rooms.json Via Ajax Request
 E$('checkrooms').onclick=function(){
   E$('cal').style.display='inline-block';
+
 
   ajaxGET('rooms.json',function(res){
 
@@ -136,13 +131,17 @@ E$('checkrooms').onclick=function(){
     if (res=="" || res=='null') alert("No Rooms Available !");
     else p=JSON.parse(res);
 
-    var pRooms=p['rooms'],totRooms=pRooms.length;
+    pRooms=p['rooms'];
+    totRooms=pRooms.length;
     pRates=p['rates'];
     totRates=pRates.length;
+
     var pAv=p['availability'],totAv=pAv.length;
-    var adate=new Date(E$('adate').value),tooltip={};
+    var adate=new Date(E$('adate').value),tooltip={},mxdate=new Date(E$('adate').value);
     var totGuest=E$('gnum').value;
 
+    DP.minDate = adate;
+    DP.maxDate = mxdate.setDate(adate.getDate() + 6);
 
     for(i=0;i<totRooms;i++){
       Rooms[pRooms[i]['name']]={};
@@ -153,8 +152,8 @@ E$('checkrooms').onclick=function(){
 
 
     for(d=0;d<7;d++){
-      var cdate=new Date(),curdt;
-      cdate.setDate(adate.getDate() + d);
+      var cdate=new Date(E$('adate').value),curdt;
+      cdate.setDate(cdate.getDate() + d);
       curdt=formatDate(cdate);
       avRooms[curdt]={};
 
@@ -210,10 +209,12 @@ E$('showsum').onclick=function(){
   var summary='',rates='';
   var totD=DP.selectedDates.length;
 
-  for(r=0;r<totRates;r++){
-    Rates[pRates[r]['room_name']]['rate']=0;
-    Rates[pRates[r]['room_name']]['tax']=0;
-    Rates[pRates[r]['room_name']]['tot']=0;
+  for(r=0;r<totRooms;r++){
+    if (Rates[pRooms[r]['name']]!=undefined){
+      Rates[pRooms[r]['name']]['rate']=0;
+      Rates[pRooms[r]['name']]['tax']=0;
+      Rates[pRooms[r]['name']]['tot']=0;
+    }
   }
 
   for(i=0;i<totD;i++){
@@ -245,9 +246,9 @@ E$('showsum').onclick=function(){
 
   for (var room_name in Rates) {
     if (Rates.hasOwnProperty(room_name)){
-      rates+='<input name="rooms" type="radio" value="'+room_name+'" checked> <b><u>'+room_name+'</u></b><br>Room Charges: NZD$'+ Rates[room_name]['rate']
-          +'<br>Tax: NZD$'+ Rates[room_name]['tax']
-          +'<br>Total Charges: NZD$'+ Rates[room_name]['tot']+'<br><br><br>';
+      rates+='<input name="rooms" type="radio" value="'+room_name+'" checked> <b><u>'+room_name+'</u></b><br>Room Charges: NZD $'+ Rates[room_name]['rate']
+          +'<br>Tax: NZD $'+ Rates[room_name]['tax']
+          +'<br>Total Charges: NZD $'+ Rates[room_name]['tot']+'<br><br><br>';
     }
   }
   E$('summary').innerHTML='Selected Dates:<br>'+summary+'<br><br>Available Rooms:<br><br>'+rates;
@@ -272,6 +273,12 @@ E$('showenq').onclick=function(){
   E$('hdates').value=selDate.join(',');
 }
 
+E$('frmEnq').onsubmit=function(){
+  if (E$('fname').value=='' || E$('lname').value=='' || E$('email').value==''){
+    alert("Please Fill The Form!");
+    return false;
+  }
+}
 
 function formatDate(dt){
   return dt.getFullYear()+'-'+("0"+(dt.getMonth()+1)).slice(-2)+'-'+("0" + dt.getDate()).slice(-2);
